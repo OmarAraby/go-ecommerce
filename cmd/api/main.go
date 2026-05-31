@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
-	"github.com/OmarAraby/go-ecommerce/config" // or "config
+	"github.com/OmarAraby/go-ecommerce/config"
 	"github.com/OmarAraby/go-ecommerce/internal/infrastructure/postgres"
 )
 
