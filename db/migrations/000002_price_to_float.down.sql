@@ -1,0 +1,2 @@
+ALTER TABLE products
+    ALTER COLUMN price TYPE NUMERIC(10, 2) USING price::NUMERIC(10, 2);
