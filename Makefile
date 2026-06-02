@@ -10,10 +10,10 @@ build:
 	go build -o api.exe ./cmd/api
 
 migrate-up:
-	$(GOBIN)/migrate -path db/migrations -database "$(DB_URL)" up
+	$(GOBIN)/migrate -path internal/infrastructure/migrations -database "$(DB_URL)" up
 
 migrate-down:
-	$(GOBIN)/migrate -path db/migrations -database "$(DB_URL)" down 1
+	$(GOBIN)/migrate -path internal/infrastructure/migrations -database "$(DB_URL)" down 1
 
 sqlc:
 	$(GOBIN)/sqlc generate

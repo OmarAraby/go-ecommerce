@@ -5,12 +5,11 @@ import (
 
 	"github.com/OmarAraby/go-ecommerce/internal/application/interfaces/repositories"
 	"github.com/OmarAraby/go-ecommerce/internal/application/interfaces/services"
-	"github.com/OmarAraby/go-ecommerce/internal/domain"
+	"github.com/OmarAraby/go-ecommerce/internal/domain/entities"
 )
 
 var _ services.ProductService = (*ProductService)(nil)
 
-// ProductService orchestrates product use cases.
 type ProductService struct {
 	repo repositories.ProductRepository
 }
@@ -19,19 +18,19 @@ func NewProductService(repo repositories.ProductRepository) *ProductService {
 	return &ProductService{repo: repo}
 }
 
-func (s *ProductService) GetByID(ctx context.Context, id int64) (*domain.Product, error) {
+func (s *ProductService) GetByID(ctx context.Context, id int64) (*entities.Product, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *ProductService) List(ctx context.Context) ([]*domain.Product, error) {
+func (s *ProductService) List(ctx context.Context) ([]*entities.Product, error) {
 	return s.repo.List(ctx)
 }
 
-func (s *ProductService) Create(ctx context.Context, p *domain.Product) (*domain.Product, error) {
+func (s *ProductService) Create(ctx context.Context, p *entities.Product) (*entities.Product, error) {
 	return s.repo.Create(ctx, p)
 }
 
-func (s *ProductService) Update(ctx context.Context, p *domain.Product) (*domain.Product, error) {
+func (s *ProductService) Update(ctx context.Context, p *entities.Product) (*entities.Product, error) {
 	return s.repo.Update(ctx, p)
 }
 
