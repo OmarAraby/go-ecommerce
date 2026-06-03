@@ -10,6 +10,7 @@ import (
 	"github.com/OmarAraby/go-ecommerce/config"
 	internlapi "github.com/OmarAraby/go-ecommerce/internal/api"
 	"github.com/OmarAraby/go-ecommerce/internal/api/health"
+	apimw "github.com/OmarAraby/go-ecommerce/internal/api/middleware"
 	"github.com/OmarAraby/go-ecommerce/internal/api/products"
 	"github.com/OmarAraby/go-ecommerce/internal/application"
 	"github.com/OmarAraby/go-ecommerce/internal/infrastructure/postgres"
@@ -41,9 +42,15 @@ func main() {
 	mux := http.NewServeMux()
 	internlapi.RegisterRoutes(mux, healthHandler, productHandler)
 
+	// Apply middleware — order matters: Recovery is outermost, then Logging, then CORS
+	var handler http.Handler = mux
+	handler = apimw.CORS(handler)
+	handler = apimw.Logging(handler)
+	handler = apimw.Recovery(handler)
+
 	addr := ":" + cfg.HTTPPort
 	log.Printf("server listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Fatalf("server: %v", err)
 	}
 }

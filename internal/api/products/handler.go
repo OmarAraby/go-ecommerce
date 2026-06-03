@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/OmarAraby/go-ecommerce/internal/api/response"
 	"github.com/OmarAraby/go-ecommerce/internal/application/interfaces/services"
 	"github.com/OmarAraby/go-ecommerce/internal/domain"
 	"github.com/OmarAraby/go-ecommerce/internal/domain/entities"
@@ -22,28 +23,28 @@ func NewHandler(svc services.ProductService) *Handler {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	prods, err := h.svc.List(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to list products")
+		response.InternalError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, prods)
+	response.JSON(w, http.StatusOK, prods)
 }
 
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid product id")
+		response.BadRequest(w, "invalid product id")
 		return
 	}
 	p, err := h.svc.GetByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "product not found")
+			response.NotFound(w, "product not found")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "failed to get product")
+		response.InternalError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, p)
+	response.JSON(w, http.StatusOK, p)
 }
 
 type productRequest struct {
@@ -56,7 +57,7 @@ type productRequest struct {
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req productRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	p, err := h.svc.Create(r.Context(), &entities.Product{
@@ -66,21 +67,21 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		Stock:       req.Stock,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create product")
+		response.InternalError(w)
 		return
 	}
-	writeJSON(w, http.StatusCreated, p)
+	response.JSON(w, http.StatusCreated, p)
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid product id")
+		response.BadRequest(w, "invalid product id")
 		return
 	}
 	var req productRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	p, err := h.svc.Update(r.Context(), &entities.Product{
@@ -92,34 +93,24 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "product not found")
+			response.NotFound(w, "product not found")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "failed to update product")
+		response.InternalError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, p)
+	response.JSON(w, http.StatusOK, p)
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid product id")
+		response.BadRequest(w, "invalid product id")
 		return
 	}
 	if err := h.svc.Delete(r.Context(), id); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to delete product")
+		response.InternalError(w)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
 }
