@@ -7,16 +7,15 @@ import (
 	"strconv"
 
 	"github.com/OmarAraby/go-ecommerce/internal/api/response"
-	"github.com/OmarAraby/go-ecommerce/internal/application/interfaces/services"
+	productapp "github.com/OmarAraby/go-ecommerce/internal/application/services/product"
 	"github.com/OmarAraby/go-ecommerce/internal/domain"
-	"github.com/OmarAraby/go-ecommerce/internal/domain/entities"
 )
 
 type Handler struct {
-	svc services.ProductService
+	svc productapp.Service
 }
 
-func NewHandler(svc services.ProductService) *Handler {
+func NewHandler(svc productapp.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
@@ -47,24 +46,19 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, p)
 }
 
-type productRequest struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	Stock       int     `json:"stock"`
-}
-
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	var req productRequest
+	var req struct {
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		Price       float64 `json:"price"`
+		Stock       int     `json:"stock"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	p, err := h.svc.Create(r.Context(), &entities.Product{
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       req.Price,
-		Stock:       req.Stock,
+	p, err := h.svc.Create(r.Context(), productapp.CreateProductDTO{
+		Name: req.Name, Description: req.Description, Price: req.Price, Stock: req.Stock,
 	})
 	if err != nil {
 		response.InternalError(w)
@@ -79,17 +73,18 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, "invalid product id")
 		return
 	}
-	var req productRequest
+	var req struct {
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		Price       float64 `json:"price"`
+		Stock       int     `json:"stock"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
 		return
 	}
-	p, err := h.svc.Update(r.Context(), &entities.Product{
-		ID:          id,
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       req.Price,
-		Stock:       req.Stock,
+	p, err := h.svc.Update(r.Context(), productapp.UpdateProductDTO{
+		ID: id, Name: req.Name, Description: req.Description, Price: req.Price, Stock: req.Stock,
 	})
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {

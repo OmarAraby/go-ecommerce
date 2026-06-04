@@ -8,13 +8,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/OmarAraby/go-ecommerce/internal/application/interfaces/repositories"
+	productapp "github.com/OmarAraby/go-ecommerce/internal/application/services/product"
 	"github.com/OmarAraby/go-ecommerce/internal/domain"
 	"github.com/OmarAraby/go-ecommerce/internal/domain/entities"
 	"github.com/OmarAraby/go-ecommerce/internal/infrastructure/db"
 )
 
-var _ repositories.ProductRepository = (*ProductRepo)(nil)
+var _ productapp.Repository = (*ProductRepo)(nil)
 
 type ProductRepo struct {
 	q *db.Queries

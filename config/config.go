@@ -7,8 +7,9 @@ import (
 
 // Config holds all application configuration loaded from environment variables.
 type Config struct {
-	HTTPPort string
-	DB       DBConfig
+	HTTPPort  string
+	JWTSecret string
+	DB        DBConfig
 }
 
 type DBConfig struct {
@@ -29,10 +30,11 @@ func (d DBConfig) DSN() string {
 }
 
 // Load reads configuration from environment variables, using defaults where safe.
-// Sensitive values (DB_PASSWORD) are required and cause an error if missing.
+// Sensitive values (DB_PASSWORD, JWT_SECRET) are required and cause an error if missing.
 func Load() (*Config, error) {
 	cfg := &Config{
-		HTTPPort: getEnv("HTTP_PORT", "8080"),
+		HTTPPort:  getEnv("HTTP_PORT", "8080"),
+		JWTSecret: os.Getenv("JWT_SECRET"), // required
 		DB: DBConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
@@ -45,6 +47,9 @@ func Load() (*Config, error) {
 
 	if cfg.DB.Password == "" {
 		return nil, fmt.Errorf("DB_PASSWORD environment variable is required")
+	}
+	if cfg.JWTSecret == "" {
+		return nil, fmt.Errorf("JWT_SECRET environment variable is required")
 	}
 
 	return cfg, nil

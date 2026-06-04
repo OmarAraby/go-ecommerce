@@ -32,3 +32,15 @@ func BadRequest(w http.ResponseWriter, message string) {
 func InternalError(w http.ResponseWriter) {
 	Error(w, http.StatusInternalServerError, CodeInternalError, "internal server error")
 }
+
+func Unauthorized(w http.ResponseWriter, message string) {
+	Error(w, http.StatusUnauthorized, CodeUnauthorized, message)
+}
+
+func Forbidden(w http.ResponseWriter, message string) {
+	Error(w, http.StatusForbidden, CodeForbidden, message)
+}
+
+func Conflict(w http.ResponseWriter, message string) {
+	Error(w, http.StatusConflict, CodeConflict, message)
+}
