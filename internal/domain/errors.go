@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrNotFound           = errors.New("not found")
-	ErrConflict           = errors.New("conflict")           // e.g. duplicate email
+	ErrConflict           = errors.New("conflict")            // e.g. duplicate email
 	ErrInvalidCredentials = errors.New("invalid credentials") // wrong password / bad token
+	ErrInvalidFileType    = errors.New("invalid file type")   // unsupported image format
 )

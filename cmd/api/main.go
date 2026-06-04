@@ -17,6 +17,7 @@ import (
 	productapp "github.com/OmarAraby/go-ecommerce/internal/application/services/product"
 	userapp "github.com/OmarAraby/go-ecommerce/internal/application/services/user"
 	"github.com/OmarAraby/go-ecommerce/internal/infrastructure/postgres"
+	"github.com/OmarAraby/go-ecommerce/internal/infrastructure/storage"
 )
 
 func main() {
@@ -36,8 +37,9 @@ func main() {
 	log.Println("connected to postgres ✓")
 
 	// Wire dependencies
+	localStorage   := storage.NewLocalStorage("uploads", "/uploads")
 	productRepo    := postgres.NewProductRepo(pool)
-	productSvc     := productapp.NewService(productRepo)
+	productSvc     := productapp.NewService(productRepo, localStorage)
 	productHandler := products.NewHandler(productSvc)
 
 	userRepo       := postgres.NewUserRepo(pool)
@@ -52,6 +54,9 @@ func main() {
 	// Register routes
 	mux := http.NewServeMux()
 	internlapi.RegisterRoutes(mux, healthHandler, productHandler, authHandler, userHandler, cfg.JWTSecret)
+
+	// Serve uploaded files statically
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 
 	// Apply middleware — Recovery outermost, then Logging, then CORS
 	var handler http.Handler = mux

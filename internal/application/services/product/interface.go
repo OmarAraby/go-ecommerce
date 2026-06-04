@@ -8,4 +8,5 @@ type Service interface {
 	Create(ctx context.Context, dto CreateProductDTO) (*ProductResponseDTO, error)
 	Update(ctx context.Context, dto UpdateProductDTO) (*ProductResponseDTO, error)
 	Delete(ctx context.Context, id int64) error
+	UploadImage(ctx context.Context, dto UploadImageInputDTO) (*ProductResponseDTO, error)
 }

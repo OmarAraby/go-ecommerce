@@ -14,4 +14,5 @@ type Repository interface {
 	Create(ctx context.Context, p *entities.Product) (*entities.Product, error)
 	Update(ctx context.Context, p *entities.Product) (*entities.Product, error)
 	Delete(ctx context.Context, id int64) error
+	UpdateImage(ctx context.Context, id int64, imageURL string) (*entities.Product, error)
 }

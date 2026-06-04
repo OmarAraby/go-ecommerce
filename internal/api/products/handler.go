@@ -12,6 +12,8 @@ import (
 	"github.com/OmarAraby/go-ecommerce/internal/domain"
 )
 
+const maxUploadBytes = 5 << 20 // 5 MB
+
 func queryInt(r *http.Request, key string, def int) int {
 	v := r.URL.Query().Get(key)
 	if v == "" {
@@ -138,6 +140,60 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			response.NotFound(w, "product not found")
+			return
+		}
+		response.InternalError(w)
+		return
+	}
+	response.JSON(w, http.StatusOK, p)
+}
+
+// POST /products/{id}/images
+func (h *Handler) UploadImage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid product id")
+		return
+	}
+
+	// cap the request body to prevent large uploads
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
+		response.BadRequest(w, "file too large (max 5MB)")
+		return
+	}
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		response.BadRequest(w, "field 'image' is required")
+		return
+	}
+	defer file.Close()
+
+	// detect content type from actual file bytes (not client header)
+	buf := make([]byte, 512)
+	n, _ := file.Read(buf)
+	contentType := http.DetectContentType(buf[:n])
+
+	// seek back so the service reads the full file
+	if _, err := file.Seek(0, 0); err != nil {
+		response.InternalError(w)
+		return
+	}
+
+	p, err := h.svc.UploadImage(r.Context(), productapp.UploadImageInputDTO{
+		ProductID:   id,
+		File:        file,
+		Filename:    header.Filename,
+		ContentType: contentType,
+	})
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			response.NotFound(w, "product not found")
+			return
+		}
+		if errors.Is(err, domain.ErrInvalidFileType) {
+			response.BadRequest(w, "only jpeg, png, webp, gif images are allowed")
 			return
 		}
 		response.InternalError(w)

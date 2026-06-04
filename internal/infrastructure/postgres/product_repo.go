@@ -158,6 +158,20 @@ func (r *ProductRepo) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
+func (r *ProductRepo) UpdateImage(ctx context.Context, id int64, imageURL string) (*entities.Product, error) {
+	row, err := r.q.UpdateProductImage(ctx, db.UpdateProductImageParams{
+		ID:       id,
+		ImageUrl: imageURL,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, fmt.Errorf("UpdateImage: %w", err)
+	}
+	return toDomain(row), nil
+}
+
 func toDomain(p db.Product) *entities.Product {
 	return &entities.Product{
 		ID:          p.ID,
@@ -165,6 +179,7 @@ func toDomain(p db.Product) *entities.Product {
 		Description: p.Description,
 		Price:       p.Price,
 		Stock:       int(p.Stock),
+		ImageURL:    p.ImageUrl,
 		CreatedAt:   p.CreatedAt.Time,
 		UpdatedAt:   p.UpdatedAt.Time,
 	}

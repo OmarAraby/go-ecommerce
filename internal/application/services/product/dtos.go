@@ -1,6 +1,9 @@
 package product
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 type CreateProductDTO struct {
 	Name        string
@@ -35,6 +38,14 @@ type ProductResponseDTO struct {
 	Description string    `json:"description"`
 	Price       float64   `json:"price"`
 	Stock       int       `json:"stock"`
+	ImageURL    string    `json:"image_url"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type UploadImageInputDTO struct {
+	ProductID   int64
+	File        io.Reader
+	Filename    string // original filename (used for extension)
+	ContentType string // pre-detected by handler
 }
