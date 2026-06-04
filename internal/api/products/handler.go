@@ -202,6 +202,54 @@ func (h *Handler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, p)
 }
 
+// DELETE /products/{id}/images/{imageId}
+func (h *Handler) DeleteImage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid product id")
+		return
+	}
+	imageID, err := strconv.ParseInt(r.PathValue("imageId"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid image id")
+		return
+	}
+	p, err := h.svc.DeleteImage(r.Context(), id, imageID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			response.NotFound(w, "image not found")
+			return
+		}
+		response.InternalError(w)
+		return
+	}
+	response.JSON(w, http.StatusOK, p)
+}
+
+// PUT /products/{id}/images/{imageId}/main
+func (h *Handler) SetMainImage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid product id")
+		return
+	}
+	imageID, err := strconv.ParseInt(r.PathValue("imageId"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "invalid image id")
+		return
+	}
+	p, err := h.svc.SetMainImage(r.Context(), id, imageID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			response.NotFound(w, "image not found")
+			return
+		}
+		response.InternalError(w)
+		return
+	}
+	response.JSON(w, http.StatusOK, p)
+}
+
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {

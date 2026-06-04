@@ -158,18 +158,79 @@ func (r *ProductRepo) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *ProductRepo) UpdateImage(ctx context.Context, id int64, imageURL string) (*entities.Product, error) {
-	row, err := r.q.UpdateProductImage(ctx, db.UpdateProductImageParams{
-		ID:       id,
-		ImageUrl: imageURL,
-	})
+func (r *ProductRepo) GetImages(ctx context.Context, productID int64) ([]*entities.ProductImage, error) {
+	rows, err := r.q.GetProductImages(ctx, productID)
+	if err != nil {
+		return nil, fmt.Errorf("GetImages: %w", err)
+	}
+	imgs := make([]*entities.ProductImage, len(rows))
+	for i, row := range rows {
+		imgs[i] = toImageDomain(row)
+	}
+	return imgs, nil
+}
+
+func (r *ProductRepo) GetImagesByProductIDs(ctx context.Context, productIDs []int64) ([]*entities.ProductImage, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, product_id, url, is_main, created_at FROM product_images
+		 WHERE product_id = ANY($1) ORDER BY product_id, is_main DESC, created_at ASC`,
+		productIDs,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("GetImagesByProductIDs: %w", err)
+	}
+	defer rows.Close()
+
+	var imgs []*entities.ProductImage
+	for rows.Next() {
+		var img entities.ProductImage
+		var createdAt pgtype.Timestamptz
+		if err := rows.Scan(&img.ID, &img.ProductID, &img.URL, &img.IsMain, &createdAt); err != nil {
+			return nil, fmt.Errorf("GetImagesByProductIDs scan: %w", err)
+		}
+		img.CreatedAt = createdAt.Time
+		imgs = append(imgs, &img)
+	}
+	return imgs, rows.Err()
+}
+
+func (r *ProductRepo) CountImages(ctx context.Context, productID int64) (int, error) {
+	count, err := r.q.CountProductImages(ctx, productID)
+	if err != nil {
+		return 0, fmt.Errorf("CountImages: %w", err)
+	}
+	return int(count), nil
+}
+
+func (r *ProductRepo) GetImage(ctx context.Context, productID, imageID int64) (*entities.ProductImage, error) {
+	row, err := r.q.GetProductImage(ctx, db.GetProductImageParams{ID: imageID, ProductID: productID})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrNotFound
 		}
-		return nil, fmt.Errorf("UpdateImage: %w", err)
+		return nil, fmt.Errorf("GetImage: %w", err)
 	}
-	return toDomain(row), nil
+	return toImageDomain(row), nil
+}
+
+func (r *ProductRepo) AddImage(ctx context.Context, productID int64, url string, isMain bool) (*entities.ProductImage, error) {
+	row, err := r.q.AddProductImage(ctx, db.AddProductImageParams{
+		ProductID: productID,
+		Url:       url,
+		IsMain:    isMain,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("AddImage: %w", err)
+	}
+	return toImageDomain(row), nil
+}
+
+func (r *ProductRepo) DeleteImage(ctx context.Context, productID, imageID int64) error {
+	return r.q.DeleteProductImage(ctx, db.DeleteProductImageParams{ID: imageID, ProductID: productID})
+}
+
+func (r *ProductRepo) SetMainImage(ctx context.Context, productID, imageID int64) error {
+	return r.q.SetMainProductImage(ctx, db.SetMainProductImageParams{ID: imageID, ProductID: productID})
 }
 
 func toDomain(p db.Product) *entities.Product {
@@ -179,8 +240,17 @@ func toDomain(p db.Product) *entities.Product {
 		Description: p.Description,
 		Price:       p.Price,
 		Stock:       int(p.Stock),
-		ImageURL:    p.ImageUrl,
 		CreatedAt:   p.CreatedAt.Time,
 		UpdatedAt:   p.UpdatedAt.Time,
+	}
+}
+
+func toImageDomain(img db.ProductImage) *entities.ProductImage {
+	return &entities.ProductImage{
+		ID:        img.ID,
+		ProductID: img.ProductID,
+		URL:       img.Url,
+		IsMain:    img.IsMain,
+		CreatedAt: img.CreatedAt.Time,
 	}
 }

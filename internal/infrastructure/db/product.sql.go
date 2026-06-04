@@ -12,7 +12,7 @@ import (
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO products (name, description, price, stock)
 VALUES ($1, $2, $3, $4)
-RETURNING id, name, description, price, stock, created_at, updated_at, image_url
+RETURNING id, name, description, price, stock, created_at, updated_at
 `
 
 type CreateProductParams struct {
@@ -38,7 +38,6 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.Stock,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.ImageUrl,
 	)
 	return i, err
 }
@@ -54,7 +53,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, name, description, price, stock, created_at, updated_at, image_url FROM products
+SELECT id, name, description, price, stock, created_at, updated_at FROM products
 WHERE id = $1
 `
 
@@ -69,13 +68,12 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 		&i.Stock,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.ImageUrl,
 	)
 	return i, err
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, description, price, stock, created_at, updated_at, image_url FROM products
+SELECT id, name, description, price, stock, created_at, updated_at FROM products
 ORDER BY created_at DESC
 `
 
@@ -96,7 +94,6 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 			&i.Stock,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.ImageUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -116,7 +113,7 @@ SET name        = $2,
     stock       = $5,
     updated_at  = NOW()
 WHERE id = $1
-RETURNING id, name, description, price, stock, created_at, updated_at, image_url
+RETURNING id, name, description, price, stock, created_at, updated_at
 `
 
 type UpdateProductParams struct {
@@ -144,36 +141,6 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.Stock,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.ImageUrl,
-	)
-	return i, err
-}
-
-const updateProductImage = `-- name: UpdateProductImage :one
-UPDATE products
-SET image_url  = $2,
-    updated_at = NOW()
-WHERE id = $1
-RETURNING id, name, description, price, stock, created_at, updated_at, image_url
-`
-
-type UpdateProductImageParams struct {
-	ID       int64  `json:"id"`
-	ImageUrl string `json:"image_url"`
-}
-
-func (q *Queries) UpdateProductImage(ctx context.Context, arg UpdateProductImageParams) (Product, error) {
-	row := q.db.QueryRow(ctx, updateProductImage, arg.ID, arg.ImageUrl)
-	var i Product
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Price,
-		&i.Stock,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.ImageUrl,
 	)
 	return i, err
 }

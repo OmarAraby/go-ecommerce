@@ -31,16 +31,22 @@ type ListParams struct {
 	MaxPrice float64
 }
 
+type ProductImageDTO struct {
+	ID     int64  `json:"id"`
+	URL    string `json:"url"`
+	IsMain bool   `json:"is_main"`
+}
+
 // ProductResponseDTO is what the API layer sees — never the raw domain entity.
 type ProductResponseDTO struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Price       float64   `json:"price"`
-	Stock       int       `json:"stock"`
-	ImageURL    string    `json:"image_url"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64            `json:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Price       float64          `json:"price"`
+	Stock       int              `json:"stock"`
+	Images      []ProductImageDTO `json:"images"`
+	CreatedAt   time.Time        `json:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at"`
 }
 
 type UploadImageInputDTO struct {

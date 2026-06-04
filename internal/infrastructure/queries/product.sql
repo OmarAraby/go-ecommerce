@@ -24,10 +24,3 @@ RETURNING *;
 -- name: DeleteProduct :exec
 DELETE FROM products
 WHERE id = $1;
-
--- name: UpdateProductImage :one
-UPDATE products
-SET image_url  = $2,
-    updated_at = NOW()
-WHERE id = $1
-RETURNING *;

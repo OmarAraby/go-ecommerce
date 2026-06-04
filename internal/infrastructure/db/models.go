@@ -25,7 +25,14 @@ type Product struct {
 	Stock       int32              `json:"stock"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-	ImageUrl    string             `json:"image_url"`
+}
+
+type ProductImage struct {
+	ID        int64              `json:"id"`
+	ProductID int64              `json:"product_id"`
+	Url       string             `json:"url"`
+	IsMain    bool               `json:"is_main"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type RefreshToken struct {

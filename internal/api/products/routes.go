@@ -18,4 +18,6 @@ func RegisterRoutes(mux *http.ServeMux, h *Handler, jwtSecret string) {
 	mux.Handle("PUT /products/{id}", requireAuth(http.HandlerFunc(h.Update)))
 	mux.Handle("DELETE /products/{id}", requireAuth(http.HandlerFunc(h.Delete)))
 	mux.Handle("POST /products/{id}/images", requireAuth(http.HandlerFunc(h.UploadImage)))
+	mux.Handle("DELETE /products/{id}/images/{imageId}", requireAuth(http.HandlerFunc(h.DeleteImage)))
+	mux.Handle("PUT /products/{id}/images/{imageId}/main", requireAuth(http.HandlerFunc(h.SetMainImage)))
 }
