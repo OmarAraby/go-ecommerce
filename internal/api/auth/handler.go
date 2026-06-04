@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/OmarAraby/go-ecommerce/internal/api/response"
+	"github.com/OmarAraby/go-ecommerce/internal/api/validate"
 	userapp "github.com/OmarAraby/go-ecommerce/internal/application/services/user"
 	"github.com/OmarAraby/go-ecommerce/internal/domain"
 )
@@ -21,12 +22,16 @@ func NewHandler(svc userapp.Service) *Handler {
 // POST /auth/register
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Name     string `json:"name"     validate:"required,min=2,max=100"`
+		Email    string `json:"email"    validate:"required,email"`
+		Password string `json:"password" validate:"required,min=8"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
+		return
+	}
+	if errs := validate.Check(req); errs != nil {
+		response.ValidationError(w, errs)
 		return
 	}
 	user, err := h.svc.Register(r.Context(), req.Name, req.Email, req.Password)
@@ -44,11 +49,15 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 // POST /auth/login
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email    string `json:"email"    validate:"required,email"`
+		Password string `json:"password" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
+		return
+	}
+	if errs := validate.Check(req); errs != nil {
+		response.ValidationError(w, errs)
 		return
 	}
 	result, err := h.svc.Login(r.Context(), req.Email, req.Password)
@@ -66,10 +75,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 // POST /auth/refresh
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		RefreshToken string `json:"refresh_token"`
+		RefreshToken string `json:"refresh_token" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
+		return
+	}
+	if errs := validate.Check(req); errs != nil {
+		response.ValidationError(w, errs)
 		return
 	}
 	pair, err := h.svc.Refresh(r.Context(), req.RefreshToken)
@@ -83,7 +96,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 // POST /auth/logout
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		RefreshToken string `json:"refresh_token"`
+		RefreshToken string `json:"refresh_token" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
@@ -96,10 +109,14 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 // POST /auth/forgot-password
 func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Email string `json:"email"`
+		Email string `json:"email" validate:"required,email"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
+		return
+	}
+	if errs := validate.Check(req); errs != nil {
+		response.ValidationError(w, errs)
 		return
 	}
 	token, err := h.svc.ForgotPassword(r.Context(), req.Email)
@@ -117,11 +134,15 @@ func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 // POST /auth/reset-password
 func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Token       string `json:"token"`
-		NewPassword string `json:"new_password"`
+		Token       string `json:"token"        validate:"required"`
+		NewPassword string `json:"new_password" validate:"required,min=8"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "invalid request body")
+		return
+	}
+	if errs := validate.Check(req); errs != nil {
+		response.ValidationError(w, errs)
 		return
 	}
 	if err := h.svc.ResetPassword(r.Context(), req.Token, req.NewPassword); err != nil {

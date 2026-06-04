@@ -1,5 +1,7 @@
 package product
 
+import "time"
+
 type CreateProductDTO struct {
 	Name        string
 	Description string
@@ -13,4 +15,26 @@ type UpdateProductDTO struct {
 	Description string
 	Price       float64
 	Stock       int
+}
+
+// ListParams holds pagination, sorting, and filter options for product listing.
+type ListParams struct {
+	Page     int
+	Limit    int
+	Sort     string  // "name" | "price" | "created_at"
+	Order    string  // "asc" | "desc"
+	Name     string  // partial match (ILIKE)
+	MinPrice float64
+	MaxPrice float64
+}
+
+// ProductResponseDTO is what the API layer sees — never the raw domain entity.
+type ProductResponseDTO struct {
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Price       float64   `json:"price"`
+	Stock       int       `json:"stock"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }

@@ -10,7 +10,7 @@ import (
 // Defined here (at the consumer) — not at the implementation.
 type Repository interface {
 	GetByID(ctx context.Context, id int64) (*entities.Product, error)
-	List(ctx context.Context) ([]*entities.Product, error)
+	List(ctx context.Context, params ListParams) ([]*entities.Product, int, error)
 	Create(ctx context.Context, p *entities.Product) (*entities.Product, error)
 	Update(ctx context.Context, p *entities.Product) (*entities.Product, error)
 	Delete(ctx context.Context, id int64) error

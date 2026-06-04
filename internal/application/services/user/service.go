@@ -30,7 +30,7 @@ func NewService(
 	return &service{users: users, refreshRepo: refreshRepo, resetRepo: resetRepo, jwtSecret: jwtSecret}
 }
 
-func (s *service) Register(ctx context.Context, name, email, password string) (*entities.User, error) {
+func (s *service) Register(ctx context.Context, name, email, password string) (*UserResponseDTO, error) {
 	if _, err := s.users.GetByEmail(ctx, email); err == nil {
 		return nil, fmt.Errorf("email already registered: %w", domain.ErrConflict)
 	}
@@ -38,7 +38,12 @@ func (s *service) Register(ctx context.Context, name, email, password string) (*
 	if err != nil {
 		return nil, fmt.Errorf("hash password: %w", err)
 	}
-	return s.users.Create(ctx, &entities.User{Name: name, Email: email, Password: string(hash), Role: "user"})
+	u, err := s.users.Create(ctx, &entities.User{Name: name, Email: email, Password: string(hash), Role: "user"})
+	if err != nil {
+		return nil, err
+	}
+	r := toUserResponseDTO(u)
+	return &r, nil
 }
 
 func (s *service) Login(ctx context.Context, email, password string) (*AuthResultDTO, error) {
@@ -112,15 +117,25 @@ func (s *service) ResetPassword(ctx context.Context, token, newPassword string) 
 	return nil
 }
 
-func (s *service) GetProfile(ctx context.Context, userID int64) (*entities.User, error) {
-	return s.users.GetByID(ctx, userID)
+func (s *service) GetProfile(ctx context.Context, userID int64) (*UserResponseDTO, error) {
+	u, err := s.users.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	r := toUserResponseDTO(u)
+	return &r, nil
 }
 
-func (s *service) UpdateProfile(ctx context.Context, userID int64, name string) (*entities.User, error) {
-	return s.users.UpdateProfile(ctx, userID, name)
+func (s *service) UpdateProfile(ctx context.Context, userID int64, name string) (*UserResponseDTO, error) {
+	u, err := s.users.UpdateProfile(ctx, userID, name)
+	if err != nil {
+		return nil, err
+	}
+	r := toUserResponseDTO(u)
+	return &r, nil
 }
 
-func (s *service) ChangeEmail(ctx context.Context, userID int64, newEmail, currentPassword string) (*entities.User, error) {
+func (s *service) ChangeEmail(ctx context.Context, userID int64, newEmail, currentPassword string) (*UserResponseDTO, error) {
 	u, err := s.users.GetByID(ctx, userID)
 	if err != nil {
 		return nil, domain.ErrNotFound
@@ -128,7 +143,12 @@ func (s *service) ChangeEmail(ctx context.Context, userID int64, newEmail, curre
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(currentPassword)); err != nil {
 		return nil, domain.ErrInvalidCredentials
 	}
-	return s.users.UpdateEmail(ctx, userID, newEmail)
+	updated, err := s.users.UpdateEmail(ctx, userID, newEmail)
+	if err != nil {
+		return nil, err
+	}
+	r := toUserResponseDTO(updated)
+	return &r, nil
 }
 
 func (s *service) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
@@ -158,5 +178,16 @@ func (s *service) issueTokenPair(ctx context.Context, u *entities.User) (*AuthRe
 	if err := s.refreshRepo.Create(ctx, u.ID, refreshToken, time.Now().Add(auth.RefreshTokenDuration)); err != nil {
 		return nil, err
 	}
-	return &AuthResultDTO{AccessToken: accessToken, RefreshToken: refreshToken, User: u}, nil
+	return &AuthResultDTO{AccessToken: accessToken, RefreshToken: refreshToken, User: toUserResponseDTO(u)}, nil
+}
+
+func toUserResponseDTO(u *entities.User) UserResponseDTO {
+	return UserResponseDTO{
+		ID:        u.ID,
+		Name:      u.Name,
+		Email:     u.Email,
+		Role:      u.Role,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
 }

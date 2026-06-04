@@ -1,14 +1,10 @@
 package user
 
-import (
-	"context"
-
-	"github.com/OmarAraby/go-ecommerce/internal/domain/entities"
-)
+import "context"
 
 type Service interface {
 	// Auth
-	Register(ctx context.Context, name, email, password string) (*entities.User, error)
+	Register(ctx context.Context, name, email, password string) (*UserResponseDTO, error)
 	Login(ctx context.Context, email, password string) (*AuthResultDTO, error)
 	Refresh(ctx context.Context, refreshToken string) (*TokenPairDTO, error)
 	Logout(ctx context.Context, refreshToken string) error
@@ -18,8 +14,8 @@ type Service interface {
 	ResetPassword(ctx context.Context, token, newPassword string) error
 
 	// Profile
-	GetProfile(ctx context.Context, userID int64) (*entities.User, error)
-	UpdateProfile(ctx context.Context, userID int64, name string) (*entities.User, error)
-	ChangeEmail(ctx context.Context, userID int64, newEmail, currentPassword string) (*entities.User, error)
+	GetProfile(ctx context.Context, userID int64) (*UserResponseDTO, error)
+	UpdateProfile(ctx context.Context, userID int64, name string) (*UserResponseDTO, error)
+	ChangeEmail(ctx context.Context, userID int64, newEmail, currentPassword string) (*UserResponseDTO, error)
 	ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error
 }
