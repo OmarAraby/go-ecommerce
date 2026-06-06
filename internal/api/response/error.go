@@ -4,12 +4,13 @@ import "net/http"
 
 // Error codes — machine-readable, used by clients to handle errors programmatically.
 const (
-	CodeNotFound      = "NOT_FOUND"
-	CodeBadRequest    = "BAD_REQUEST"
-	CodeInternalError = "INTERNAL_ERROR"
-	CodeConflict      = "CONFLICT"
-	CodeUnauthorized  = "UNAUTHORIZED"
-	CodeForbidden     = "FORBIDDEN"
+	CodeNotFound        = "NOT_FOUND"
+	CodeBadRequest      = "BAD_REQUEST"
+	CodeInternalError   = "INTERNAL_ERROR"
+	CodeConflict        = "CONFLICT"
+	CodeUnauthorized    = "UNAUTHORIZED"
+	CodeForbidden       = "FORBIDDEN"
+	CodeTooManyRequests = "TOO_MANY_REQUESTS"
 )
 
 type ErrorResponse struct {
@@ -43,4 +44,8 @@ func Forbidden(w http.ResponseWriter, message string) {
 
 func Conflict(w http.ResponseWriter, message string) {
 	Error(w, http.StatusConflict, CodeConflict, message)
+}
+
+func TooManyRequests(w http.ResponseWriter) {
+	Error(w, http.StatusTooManyRequests, CodeTooManyRequests, "too many requests — slow down")
 }

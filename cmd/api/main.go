@@ -12,8 +12,10 @@ import (
 	apiauth "github.com/OmarAraby/go-ecommerce/internal/api/auth"
 	"github.com/OmarAraby/go-ecommerce/internal/api/health"
 	apimw "github.com/OmarAraby/go-ecommerce/internal/api/middleware"
+	"github.com/OmarAraby/go-ecommerce/internal/api/orders"
 	"github.com/OmarAraby/go-ecommerce/internal/api/products"
 	"github.com/OmarAraby/go-ecommerce/internal/api/users"
+	orderapp "github.com/OmarAraby/go-ecommerce/internal/application/services/order"
 	productapp "github.com/OmarAraby/go-ecommerce/internal/application/services/product"
 	userapp "github.com/OmarAraby/go-ecommerce/internal/application/services/user"
 	"github.com/OmarAraby/go-ecommerce/internal/infrastructure/postgres"
@@ -49,17 +51,22 @@ func main() {
 	authHandler    := apiauth.NewHandler(userSvc)
 	userHandler    := users.NewHandler(userSvc)
 
+	orderRepo      := postgres.NewOrderRepo(pool)
+	orderSvc       := orderapp.NewService(orderRepo, productRepo)
+	orderHandler   := orders.NewHandler(orderSvc)
+
 	healthHandler  := health.NewHandler(pool)
 
 	// Register routes
 	mux := http.NewServeMux()
-	internlapi.RegisterRoutes(mux, healthHandler, productHandler, authHandler, userHandler, cfg.JWTSecret)
+	internlapi.RegisterRoutes(mux, healthHandler, productHandler, authHandler, userHandler, orderHandler, cfg.JWTSecret)
 
 	// Serve uploaded files statically
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 
-	// Apply middleware — Recovery outermost, then Logging, then CORS
+	// Apply middleware — outermost first: Recovery → Logging → CORS → RateLimit
 	var handler http.Handler = mux
+	handler = apimw.RateLimit(100, 20)(handler) // 100 req/s, burst of 20 per IP
 	handler = apimw.CORS(handler)
 	handler = apimw.Logging(handler)
 	handler = apimw.Recovery(handler)

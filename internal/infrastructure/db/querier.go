@@ -11,6 +11,9 @@ import (
 type Querier interface {
 	AddProductImage(ctx context.Context, arg AddProductImageParams) (ProductImage, error)
 	CountProductImages(ctx context.Context, productID int64) (int64, error)
+	CountUserOrders(ctx context.Context, userID int64) (int64, error)
+	CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error)
+	CreateOrderItem(ctx context.Context, arg CreateOrderItemParams) (OrderItem, error)
 	CreatePasswordResetToken(ctx context.Context, arg CreatePasswordResetTokenParams) (PasswordResetToken, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
@@ -18,6 +21,8 @@ type Querier interface {
 	DeleteExpiredRefreshTokens(ctx context.Context) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteProductImage(ctx context.Context, arg DeleteProductImageParams) error
+	GetOrder(ctx context.Context, id int64) (Order, error)
+	GetOrderItems(ctx context.Context, orderID int64) ([]OrderItem, error)
 	GetPasswordResetToken(ctx context.Context, token string) (PasswordResetToken, error)
 	GetProduct(ctx context.Context, id int64) (Product, error)
 	GetProductImage(ctx context.Context, arg GetProductImageParams) (ProductImage, error)
@@ -25,7 +30,9 @@ type Querier interface {
 	GetRefreshToken(ctx context.Context, token string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
+	GetUserOrder(ctx context.Context, arg GetUserOrderParams) (Order, error)
 	ListProducts(ctx context.Context) ([]Product, error)
+	ListUserOrders(ctx context.Context, arg ListUserOrdersParams) ([]Order, error)
 	MarkPasswordResetTokenUsed(ctx context.Context, id int64) error
 	RevokeAllUserRefreshTokens(ctx context.Context, userID int64) error
 	RevokeRefreshToken(ctx context.Context, token string) error
