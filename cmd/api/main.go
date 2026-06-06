@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -71,9 +76,36 @@ func main() {
 	handler = apimw.Logging(handler)
 	handler = apimw.Recovery(handler)
 
-	addr := ":" + cfg.HTTPPort
-	log.Printf("server listening on %s", addr)
-	if err := http.ListenAndServe(addr, handler); err != nil {
-		log.Fatalf("server: %v", err)
+	srv := &http.Server{
+		Addr:         ":" + cfg.HTTPPort,
+		Handler:      handler,
+		ReadTimeout:  15 * time.Second, // time to read request headers + body
+		WriteTimeout: 30 * time.Second, // time to write response
+		IdleTimeout:  60 * time.Second, // keep-alive idle timeout
 	}
+
+	// Start server in a goroutine so main can wait for shutdown signal
+	go func() {
+		log.Printf("server listening on :%s", cfg.HTTPPort)
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("server: %v", err)
+		}
+	}()
+
+	// Block until SIGINT (Ctrl+C) or SIGTERM (Docker / systemd stop) is received
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-quit
+	log.Printf("received signal %s — shutting down gracefully", sig)
+
+	// Give in-flight requests up to 30 seconds to complete
+	shutCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutCtx); err != nil {
+		log.Fatalf("graceful shutdown failed: %v", err)
+	}
+
+	log.Println("server stopped cleanly")
+	// defer pool.Close() runs here — DB connections are released
 }

@@ -13,8 +13,8 @@ import (
 )
 
 type client struct {
-	limiter  *rate.Limiter
-	lastSeen time.Time
+	limiter  *rate.Limiter // token bucket limiter for this client
+	lastSeen time.Time     // last time this client made a request on this api
 }
 
 // IPRateLimiter tracks a token-bucket limiter per client IP.
