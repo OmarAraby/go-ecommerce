@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option go_package = "github.com/OmarAraby/go-ecommerce/gen/notification/v1;notificationv1";
+
+// NotificationService handles sending notifications to users.
+service NotificationService {
+  rpc SendOrderConfirmation(OrderConfirmationRequest) returns (NotificationResponse);
+  rpc SendWelcomeEmail(WelcomeEmailRequest) returns (NotificationResponse);
+  rpc SendPasswordReset(PasswordResetRequest) returns (NotificationResponse);
+}
+
+// ─── Requests ────────────────────────────────────────────────────────────────
+
+message OrderConfirmationRequest {
+  string user_email  = 1;
+  string user_name   = 2;
+  int64  order_id    = 3;
+  double total_amount = 4;
+}
+
+message WelcomeEmailRequest {
+  string user_email = 1;
+  string user_name  = 2;
+}
+
+message PasswordResetRequest {
+  string user_email  = 1;
+  string reset_token = 2;
+}
+
+// ─── Response ────────────────────────────────────────────────────────────────
+
+message NotificationResponse {
+  bool   success = 1;
+  string message = 2;
+}

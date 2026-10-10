@@ -1,0 +1,6 @@
+# e4 memory tooling: hook scripts must stay LF so bash (Git Bash) runs them on Windows checkouts
+*.sh text eol=lf
+
+# e4 memory: append-only files merge by union (keep both sides) to avoid cross-branch conflicts
+.ai-memory/session-log.md merge=union
+.ai-memory/decisions.md   merge=union

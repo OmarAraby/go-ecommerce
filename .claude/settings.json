@@ -1,0 +1,39 @@
+{
+  "$comment": "Drop this in .claude/settings.json (project) or ~/.claude/settings.json (global). Paths assume hooks live in .claude/hooks/. Adjust if you use a different location. On Windows, point commands at the .ps1 versions or run them via 'bash'/'python'.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session_start.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session_end.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/stop_reminder.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

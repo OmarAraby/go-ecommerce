@@ -25,3 +25,6 @@ coverage.*
 # OS
 .DS_Store
 Thumbs.db
+
+# e4 memory: generated view of .ai-memory/tasks/*.md — never committed
+.ai-memory/active-tasks.md

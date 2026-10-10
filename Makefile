@@ -1,7 +1,8 @@
-GOBIN  := $(shell go env GOPATH)/bin
-DB_URL := postgres://postgres:$(DB_PASSWORD)@localhost:5432/ecommerce?sslmode=disable
+GOBIN    := $(shell go env GOPATH)/bin
+PROTOC   := $(HOME)/protoc/bin/protoc
+DB_URL   := postgres://postgres:$(DB_PASSWORD)@localhost:5432/ecommerce?sslmode=disable
 
-.PHONY: run build migrate-up migrate-down sqlc
+.PHONY: run build migrate-up migrate-down sqlc proto
 
 run:
 	go run ./cmd/api
@@ -20,3 +21,12 @@ sqlc:
 
 test:
 	go test ./...
+
+proto:
+	$(PROTOC) \
+		--proto_path=proto \
+		--go_out=gen \
+		--go_opt=paths=source_relative \
+		--go-grpc_out=gen \
+		--go-grpc_opt=paths=source_relative \
+		notification/v1/notification.proto
